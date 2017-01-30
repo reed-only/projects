@@ -20,7 +20,7 @@ Procedure:
      number.  Ex. Nirvana_2
   6. If maximum of 100 folders is reached, exit.
 
-Usage: python alpinify.py
+Usage: python alpinify.py -B "Nirvana" "Reel Big Fish"
 """
 
 import os
@@ -28,7 +28,7 @@ import argparse
 import shutil
 
 MUSIC_DIR = '~/Music/Albums'
-DESTINATION_DIR = '/Volumes/NO NAME'
+DESTINATION_DIR = '/Volumes/Alpine'
 FILE_EXT = '.mp3'
 MAX_FILES_PER_DIRECTORY = 100
 
