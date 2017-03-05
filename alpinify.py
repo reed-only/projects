@@ -9,16 +9,15 @@ stored MP3 collection into a directory structure that is Alpine-compatible and s
 Assumptions:
   1. Given a music folder, files are organized by band_name --> album_name --> music_file_name
   2. Music files have extension .mp3
-  3. Destination directory contains no conflicting directories
 
 Procedure:
   1. Step through top level directories (band name).
   2. Step through second level directories (album name).
-  3. Create a folder, if it does not exist, for the band and add the music files for each album.
-  4. Music file name will be altered to include the album name.  Ex. Polly.mp3 becomes Nevermind-Polly.mp3
-  5. If the music files in an album will overflow the max 100 files per folder, create a new folder with underscore and
+  3. Remove band folder and files contained within if folder exists.
+  4. Create a folder for the band and add the music files for each album.
+  5. Music file name will be altered to include the album name.  Ex. Polly.mp3 becomes Nevermind-Polly.mp3
+  6. If the music files in an album will overflow the max 100 files per folder, create a new folder with underscore and
      number.  Ex. Nirvana_2
-  6. If maximum of 100 folders is reached, exit.
 
 Usage: python alpinify.py -B "Nirvana" "Reel Big Fish"
 """
@@ -73,43 +72,68 @@ def main():
 
                     # If we found songs to transfer, determine destination folder
                     if songs_to_transfer:
-                        band_dest_directory = get_band_dest_directory(band, len(songs_to_transfer), band_directory_map)
+                        band_dest_directory = get_band_dest_directory(
+                            dest_path, band, len(songs_to_transfer), band_directory_map)
 
                         # For each song, copy contents to new location, adding album name to song filename
                         for (song_path, song) in songs_to_transfer:
                             dest_directory = os.path.join(dest_path, band_dest_directory)
-                            create_directory(dest_directory)
                             dest_song_path = os.path.join(dest_directory, album + '-' + song)
                             print song_path, '-->', dest_song_path
                             shutil.copy(song_path, dest_song_path)
 
 
-def get_band_dest_directory(band, files_in_album, band_directory_map):
+def get_band_dest_directory(dest_path, band, files_in_album, band_directory_map):
     """
-    Update the band_directory_map and return the destination band name directory
+    Update the band_directory_map and return the destination band name directory.  Also delete existing band folder
+    and create a new one.
 
     Nominally we take the band name directory as is, but when we exceed 100 files per directory, we create a new one
     with index appended.  Ex: Nirvana_2
 
+    :param dest_path: path to destination directory
     :param band: band name from source directory
-    :param files_in_album: Number of song files in album directory
-    :param band_directory_map: Map of band to {directory, folder_count, file_count}
+    :param files_in_album: number of song files in album directory
+    :param band_directory_map: map of band to {directory, folder_count, file_count}
     :return: destination band directory
     """
     if band not in band_directory_map:
-        band_directory_map[band] = {
-            'directory': band,
-            'folder_count': 1,
-            'file_count': files_in_album
-        }
+        create_new_band_directory(dest_path, band, 1, files_in_album, band_directory_map)
     file_count = band_directory_map[band]['file_count'] + files_in_album
     if file_count > MAX_FILES_PER_DIRECTORY:
-        band_directory_map[band]['folder_count'] += 1
-        band_directory_map[band]['file_count'] = files_in_album
-        band_directory_map[band]['directory'] = band + '_' + str(band_directory_map[band]['folder_count'])
+        create_new_band_directory(dest_path, band, band_directory_map[band]['folder_count'] + 1, files_in_album,
+                                  band_directory_map)
     else:
         band_directory_map[band]['file_count'] = file_count
     return band_directory_map[band]['directory']
+
+
+def create_new_band_directory(dest_path, band, folder_count, file_count, band_directory_map):
+    """
+    Update band directory map then delete existing band folder (including contents) and create new one
+
+    :param dest_path: path to destination directory
+    :param band: band name from source directory
+    :param folder_count: number of folders generated for band
+    :param file_count: number of song files in album directory
+    :param band_directory_map: map of band to {directory, folder_count, file_count}
+    """
+    if folder_count == 1:
+        directory = band
+    else:
+        directory = band + '_' + str(band_directory_map[band]['folder_count'])
+    band_directory_map[band] = {
+        'directory': directory,
+        'folder_count': folder_count,
+        'file_count': file_count
+    }
+    remove_directory(os.path.join(dest_path, directory))
+    create_directory(os.path.join(dest_path, directory))
+
+
+def remove_directory(directory):
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
 
 
 def create_directory(directory):
