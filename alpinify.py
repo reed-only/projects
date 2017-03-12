@@ -98,7 +98,7 @@ def get_band_dest_directory(dest_path, band, files_in_album, band_directory_map)
     :return: destination band directory
     """
     if band not in band_directory_map:
-        create_new_band_directory(dest_path, band, 1, files_in_album, band_directory_map)
+        create_new_band_directory(dest_path, band, 1, 0, band_directory_map)
     file_count = band_directory_map[band]['file_count'] + files_in_album
     if file_count > MAX_FILES_PER_DIRECTORY:
         create_new_band_directory(dest_path, band, band_directory_map[band]['folder_count'] + 1, files_in_album,
@@ -121,7 +121,8 @@ def create_new_band_directory(dest_path, band, folder_count, file_count, band_di
     if folder_count == 1:
         directory = band
     else:
-        directory = band + '_' + str(band_directory_map[band]['folder_count'])
+        directory = band + '_' + str(folder_count)
+    print directory
     band_directory_map[band] = {
         'directory': directory,
         'folder_count': folder_count,
