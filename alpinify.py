@@ -26,7 +26,7 @@ import os
 import argparse
 import shutil
 
-MUSIC_DIR = '~/Music/Albums'
+MUSIC_DIR = '~/Music'
 DESTINATION_DIR = '/Volumes/Alpine'
 FILE_EXT = '.mp3'
 MAX_FILES_PER_DIRECTORY = 100
@@ -78,8 +78,8 @@ def main():
                         # For each song, copy contents to new location, adding album name to song filename
                         for (song_path, song) in songs_to_transfer:
                             dest_directory = os.path.join(dest_path, band_dest_directory)
-                            dest_song_path = os.path.join(dest_directory, album + '-' + song)
-                            print song_path, '-->', dest_song_path
+                            dest_song_path = os.path.join(str(dest_directory), album + '-' + song)
+                            print(song_path, '-->', dest_song_path)
                             shutil.copy(song_path, dest_song_path)
 
 
@@ -122,7 +122,7 @@ def create_new_band_directory(dest_path, band, folder_count, file_count, band_di
         directory = band
     else:
         directory = band + '_' + str(folder_count)
-    print directory
+    print(directory)
     band_directory_map[band] = {
         'directory': directory,
         'folder_count': folder_count,
